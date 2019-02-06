@@ -1,0 +1,56 @@
+switch.family_room_receiver:
+  icon: mdi:audio-video
+switch.cabinet_lights:
+  icon: mdi:lightbulb
+sensor.dark_sky_summary_custom:
+  friendly_name: Summary
+sensor.dark_sky_wind_bearing_custom:
+  friendly_name: Wind Direction
+  icon: mdi:compass
+sensor.dark_sky_humidity:
+  friendly_name: Humidity
+sensor.dark_sky_precip_probability:
+  friendly_name: Precip Probability
+sensor.dark_sky_pressure:
+  friendly_name: Pressure
+sensor.dark_sky_temperature:
+  friendly_name: Temperature
+sensor.dark_sky_wind_speed:
+  friendly_name: Wind Speed
+sensor.dark_sky_uv_index:
+  friendly_name: UV Index
+sensor.first_floor_ecobee_schedule_state:
+  friendly_name: First Floor Comfort Mode
+  icon: mdi:gauge
+sensor.second_floor_ecobee_schedule_state:
+  friendly_name: Second Floor Comfort Mode
+  icon: mdi:gauge
+sensor.basement_humidity:
+  icon: mdi:water-percent
+binary_sensor.pir_1:
+  friendly_name: Kitchen
+binary_sensor.pir_2:
+  friendly_name: Living Room
+binary_sensor.pir_3:
+  friendly_name: Front Entrance
+binary_sensor.pir_4:
+  friendly_name: Basement
+switch.basement_dehumidifier:
+  icon: mdi:water
+sensor.baby_monitor_motion_detected:
+  friendly_name: Baby Monitor Motion Detected
+script.amcrest_ptz_1:
+  friendly_name: Crib
+script.amcrest_ptz_2:
+  friendly_name: Changing Table
+script.amcrest_ptz_3:
+  friendly_name: Rocking Chair
+script.amcrest_ptz_4:
+  friendly_name: Pullout Bed
+script.amcrest_ptz_5:
+  friendly_name: Toy Shelf
+script.restart_home_assistant:
+  friendly_name: Restart Home Assistant
+  icon: mdi:nuke
+device_tracker.alexis_iphone_2:
+  friendly_name: Alexis iPhone App

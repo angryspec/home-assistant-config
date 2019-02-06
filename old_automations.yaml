@@ -1,0 +1,494 @@
+#-----------------------------------------
+# startup
+#-----------------------------------------    
+- alias: 'services startup tasks'
+  trigger:
+    - platform: homeassistant
+      event: start
+  action:
+    - service: script.paul_initial_state
+    - service: script.alexis_initial_state
+    - service: frontend.set_theme
+      data:
+        name: slate_blue    
+    - service: timer.start
+      data:
+        entity_id: timer.living_room_fan    
+    - service: timer.start
+      data:
+        entity_id: timer.master_suite_fan    
+    - service: timer.start
+      data:
+        entity_id: timer.family_room_fan
+#-----------------------------------------
+# location based
+#-----------------------------------------   
+- alias: 'everyone is gone'
+  trigger:
+    - platform: template
+      value_template: "{{ is_state('input_boolean.alexis_combined_state', 'off')
+        and is_state('input_boolean.pauls_combined_state', 'off') }}"
+  action:
+    - service: script.climate_away_mode_on
+    - service: light.turn_off
+      data:
+        entity_id: group.all_lights
+    - service: fan.turn_off
+      data:
+        entity_id: group.all_fans
+    - service: switch.turn_off
+      data:
+        entity_id: group.all_switches
+    - service: script.alarm_arm_away
+#-----------------------------------------           
+- alias: 'alexis is home'
+  trigger:
+  - platform: state
+    entity_id: input_boolean.alexis_combined_state
+    from: 'off'    
+    to: 'on'
+  action:
+    - service: script.climate_resume_schedule    
+    - service: script.alexis_is_home    
+    - service: script.alarm_disarm
+#-----------------------------------------    
+- alias: 'paul is home'
+  trigger:
+    - platform: state
+      entity_id: input_boolean.pauls_combined_state
+      from: 'off'    
+      to: 'on'
+  action:
+    - service: script.climate_resume_schedule    
+    - service: script.paul_is_home    
+    - service: script.alarm_disarm
+#-----------------------------------------
+- alias: 'alexis home tracker'
+  trigger:
+    - platform: template
+      value_template: "{{ is_state('device_tracker.alexis', 'home') or is_state('device_tracker.alexisiphone_mqtt',
+        'present') }}"
+    - platform: zone
+      entity_id: device_tracker.alexis
+      event: enter      
+      zone: zone.home
+  condition:
+    - condition: state
+      entity_id: input_boolean.alexis_combined_state
+      state: 'off'
+  action:
+    - service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.alexis_combined_state
+#-----------------------------------------      
+- alias: 'alexis away tracker'
+  trigger:
+    - platform: template
+      value_template: "{{ is_state('device_tracker.alexis', 'not_home') and is_state('device_tracker.alexisiphone_mqtt',
+        'not present') }}"
+  condition:
+    - condition: state
+      entity_id: input_boolean.alexis_combined_state
+      state: 'on'
+  action:
+    - service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.alexis_combined_state
+#-----------------------------------------      
+- alias: 'paul home tracker'
+  trigger:
+    - platform: template
+      value_template: "{{ is_state('device_tracker.paul', 'home') or is_state('device_tracker.paul_mqtt',
+        'present') }}"
+    - platform: zone
+      entity_id: device_tracker.paul
+      event: enter      
+      zone: zone.home
+  condition:
+    - condition: state
+      entity_id: input_boolean.pauls_combined_state
+      state: 'off'
+  action:
+    - service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.pauls_combined_state
+#-----------------------------------------    
+- alias: 'paul away tracker'
+  trigger:
+    - platform: template
+      value_template: "{{ is_state('device_tracker.paul', 'not_home') and is_state('device_tracker.paul_mqtt',
+        'not present') }}"
+  condition:
+    - condition: state
+      entity_id: input_boolean.pauls_combined_state
+      state: 'on'
+  action:
+  - service: input_boolean.turn_off
+    data:
+      entity_id: input_boolean.pauls_combined_state
+#-----------------------------------------
+# devices
+#----------------------------------------- 
+- alias: 'alarm triggered'
+  trigger:
+    - platform: template
+      value_template: "{{ is_state_attr('alarm_control_panel.simplisafe', 'alarm_active', 'true') }}"
+  action:
+    - service: script.alarm_triggered
+#-----------------------------------------
+- alias: 'turn on kitchen lights when motion detected'
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.pir_1
+      from: 'off'
+      to: 'on'
+  condition:
+    - condition: state
+      entity_id: light.kitchen_lights
+      state: 'off'
+  action:
+    - service: light.turn_on
+      data:
+        entity_id: light.kitchen_lights    
+    - service: timer.start
+      data:
+        entity_id: timer.kitchen_accent_lights
+#-----------------------------------------    
+- alias: 'restart kitchen lights timer when motion detected'
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.pir_1
+      from: 'off'    
+      to: 'on'
+  condition:
+    - condition: state
+      entity_id: light.kitchen_lights
+      state: 'on'
+  action:
+    - service: timer.start
+      data:
+        entity_id: timer.kitchen_accent_lights    
+#-----------------------------------------
+- alias: 'turn off kitchen lights when timer stops'
+  trigger:
+    - platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.kitchen_accent_lights    
+  condition:
+    - condition: state
+      entity_id: light.kitchen_lights
+      state: 'on'
+  action:
+    - service: light.turn_off
+      data:
+        entity_id: light.kitchen_lights 
+#-----------------------------------------    
+- alias: 'turn on lights at sunset'
+  trigger:
+    - platform: sun
+      event: sunset
+      offset: -00:45:00
+  action:
+    - service: light.turn_on
+      data:
+        entity_id: switch.cabinet_lights
+    - service: light.turn_on  
+      data:
+        entity_id: light.evelyns_night_light
+    - service: light.turn_on
+      data:
+        entity_id: light.guest_bathroom_lamp
+    - service: timer.start
+      data:
+        entity_id: timer.evelyns_night_light
+#-----------------------------------------
+- alias: 'turn off lights at sunrise'
+  trigger:
+    - platform: sun
+      event: sunrise
+      offset: 00:45:00
+  action:
+    - service: light.turn_off
+      data:
+        entity_id: switch.cabinet_lights
+    - service: light.turn_off
+      data:
+        entity_id: light.guest_bathroom_lamp
+    - service: timer.cancel
+      data:
+        entity_id: timer.evelyns_night_light
+    - service: light.turn_off 
+      data:
+        entity_id: light.evelyns_night_light
+#-----------------------------------------       
+- alias: 'change evelyns night light color'
+  trigger:
+    - platform: event      
+      event_type: timer.finished    
+      event_data:
+        entity_id: timer.evelyns_night_light
+  condition:
+    - condition: state
+      entity_id: light.evelyns_night_light
+      state: 'on'
+  action:
+    - service: script.evelyns_random_night_light 
+#-----------------------------------------    
+- alias: 'circulate living room air every 30 minutes'
+  trigger:
+    - platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.living_room_fan    
+  condition:
+    - condition: state
+      entity_id: fan.living_room_fan
+      state: 'off'
+  action:
+    - service: timer.start
+      data:
+        entity_id: timer.living_room_fan    
+    - service: script.circulate_air_living_room
+#-----------------------------------------
+- alias: 'circulate master suite air every 30 minutes'
+  trigger:
+    - platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.master_suite_fan    
+  condition:
+    - condition: state
+      entity_id: fan.master_suite_fan
+      state: 'off'
+  action:
+    - service: timer.start
+      data:
+        entity_id: timer.master_suite_fan    
+    - service: script.circulate_air_master_suite
+#-----------------------------------------
+- alias: 'circulate family room air every 30 minutes'
+  trigger:
+    - platform: event
+      event_type: timer.finished 
+      event_data:
+        entity_id: timer.family_room_fan     
+  condition:
+    - condition: state
+      entity_id: fan.family_room_fan
+      state: 'off'
+  action:
+    - service: timer.start
+      data:
+        entity_id: timer.family_room_fan    
+    - service: script.circulate_air_family_room
+#-----------------------------------------
+- alias: 'upstairs_temp_regulation_fan_on'
+  trigger:
+    - platform: template
+      value_template: >-
+        {% set third = states.sensor.third_floor_temperature.state|float %}
+        {% set second = states.sensor.second_floor_temperature.state|float %}
+        {% set temp_diff = (third - second) %}
+        {% if temp_diff > 5.0 %}
+          true
+        {% else %}
+          false
+        {% endif %}
+  condition:
+    - condition: template
+      value_template: "{{ is_state_attr('climate.second_floor', 'fan', 'off') }}"
+    - condition: state 
+      entity_id: sensor.second_floor_ecobee_fan_state
+      state: 'off'
+      for:
+        minutes: 10
+  action:
+    - service: climate.set_fan_mode
+      data:
+        entity_id: climate.second_floor
+        fan_mode: 'on'
+#-----------------------------------------       
+- alias: 'upstairs_temp_regulation_fan_off'
+  trigger:
+    - platform: template
+      value_template: >-
+        {% set third = states.sensor.third_floor_temperature.state|float %}
+        {% set second = states.sensor.second_floor_temperature.state|float %}
+        {% set temp_diff = (third - second) %}
+        {% if temp_diff <= 5.0 %}
+          true
+        {% else %}
+          false
+        {% endif %}
+  condition:
+    - condition: template
+      value_template: "{{ is_state_attr('climate.second_floor', 'fan', 'on') }}"
+  action:
+    - service: climate.set_fan_mode
+      data:
+        entity_id: climate.second_floor
+        fan_mode: 'auto'
+#-----------------------------------------
+- alias: 'basement humidifier on'
+  trigger:
+    - platform: template
+      value_template: >-
+        {% if states('sensor.basement_humidity') > "58" %}
+          true
+        {% else %}
+          false
+        {% endif %}  
+  action:
+    - service: switch.turn_on
+      data:
+        entity_id: switch.basement_dehumidifier
+#-----------------------------------------    
+- alias: 'basement humidifier off'
+  trigger:
+    - platform: template
+      value_template: >-
+        {% if states('sensor.basement_humidity') < "52" %}
+          true
+        {% else %}
+          false
+        {% endif %}  
+  action:
+    - service: switch.turn_off 
+      data:
+        entity_id: switch.basement_dehumidifier      
+#-----------------------------------------
+- alias: 'garage door auto close'
+  trigger:
+    - platform: template
+      value_template: >-
+        {% if is_state('cover.garage', "open") and as_timestamp(now()) - as_timestamp(states.cover.garage.last_changed) > 900 %}
+          true
+        {% else %}
+          false
+        {% endif %}"
+  action:
+    - service: cover.close_cover
+      data:
+        entity_id: cover.garage    
+    - service: script.garage_door_left_open   
+#-----------------------------------------
+# notifications
+#-----------------------------------------
+- alias: 'garage opened notify'
+  trigger:
+    - platform: state
+      entity_id: cover.garage
+      from: closed      
+      to: open
+  condition:
+    - condition: template
+      value_template: >-
+        {% if (as_timestamp(now()) - as_timestamp(states.cover.garage.last_changed) >= 1.0) %}
+          true
+        {% else %}
+          false
+        {% endif %}
+  action:
+    - service: script.garage_opened 
+#-----------------------------------------  
+- alias: 'alarm arming notify'
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.simplisafe
+      from: disarmed      
+      to: armed_away
+    - platform: state
+      entity_id: alarm_control_panel.simplisafe
+      from: disarmed      
+      to: armed_home  
+  action:
+    - service: script.alarm_arming_notify
+#-----------------------------------------  
+- alias: 'alarm armed home notify'
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.simplisafe
+      from: disarmed    
+      to: armed_home  
+  action:
+    - service: script.alarm_armed_home_notify
+#-----------------------------------------  
+- alias: 'alarm armed away notify'
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.simplisafe
+      from: disarmed    
+      to: armed_away  
+  action:
+    - service: script.alarm_armed_away_notify
+- alias: 'apc offline notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.ups_status
+  action:
+    - service: script.apc_status_offline
+#-----------------------------------------  
+- alias: 'apc nominal voltage notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.ups_battery_voltage    
+      to: '24.0'
+  action:
+    - service: script.apc_status_nominal_voltage
+#-----------------------------------------  
+- alias: 'ups running on batteries notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.ups_alarm_delay      
+    - platform: state
+      entity_id: sensor.ups_transfer_count
+  action:
+    - service: script.ups_on_batteries
+#-----------------------------------------
+- alias: 'notify_change_air_filters'
+  trigger:
+    - platform: template
+      value_template: >-
+        {% if now().strftime('%d') == '9' %}
+          true
+        {% else %}
+          false
+        {% endif%}
+  action:
+    - service: script.notify_change_air_filters
+- alias: 'second floor high temp warning notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.second_floor_temperature
+      from: '30.9'
+      to: '31.0'
+  action:
+    - service: script.second_floor_high_temp_warning
+#-----------------------------------------
+- alias: 'first floor high temp warning notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.first_floor_temperature
+      from: '30.9'
+      to: '31.0'
+  action:
+    - service: script.first_floor_high_temp_warning
+#-----------------------------------------
+- alias: 'second floor low temp warning notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.second_floor_temperature
+      from: '15.5'
+      to: '15.4'
+  action:
+    - service: script.second_floor_low_temp_warning
+#-----------------------------------------    
+- alias: 'first floor low temp warning notify'
+  trigger:
+    - platform: state
+      entity_id: sensor.first_floor_temperature
+      from: '15.5'
+      to: '15.4'
+  action:
+    - service: script.first_floor_low_temp_warning

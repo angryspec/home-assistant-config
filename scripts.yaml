@@ -1,0 +1,616 @@
+paul_initial_state:
+  sequence:
+  - service_template: "{% if is_state('device_tracker.paul_mqtt', 'present') and is_state('device_tracker.paul',\
+      \ 'home') %}\n  input_boolean.turn_on\n{% elif is_state('device_tracker.paul_mqtt',\
+      \ 'not present') and is_state('device_tracker.paul', 'not_home') %}\n  input_boolean.turn_off\n\
+      {% else %}\n  input_boolean.turn_on\n{% endif %}"
+    data:
+      entity_id: input_boolean.pauls_combined_state
+alexis_initial_state:
+  sequence:
+  - service_template: "{% if is_state('device_tracker.alexisiphone_mqtt', 'present')\
+      \ and is_state('device_tracker.alexis', 'home') %}\n  input_boolean.turn_on\n\
+      {% elif is_state('device_tracker.alexisiphone_mqtt', 'not present') and is_state('device_tracker.alexis',\
+      \ 'not_home') %}\n  input_boolean.turn_off\n{% else %}\n  input_boolean.turn_on\n\
+      {% endif %}"
+    data:
+      entity_id: input_boolean.alexis_combined_state
+turn_on_alarm:
+  sequence:
+  - condition: state
+    entity_id: alarm_control_panel.simplisafe
+    state: disarmed
+  - service: alarm_control_panel.alarm_arm_away
+    entity_id: alarm_control_panel.simplisafe
+    data:
+      code: 1234
+alarm_disarm:
+  sequence:
+  - condition: template
+    value_template: '{{is_state(''alarm_control_panel.simplisafe'', ''armed_away'')
+      or is_state(''alarm_control_panel.simplisafe'', ''armed_home'')}}'
+  - service: alarm_control_panel.alarm_disarm
+    entity_id: alarm_control_panel.simplisafe
+    data:
+      code: 1234
+alarm_motion_detected:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Movement detected while alarm is armed, Swipe down for actions
+      data:
+        push:
+          badge: 0
+          category: alarm
+alarm_triggered:
+  sequence:
+  - service: alarm_control_panel.alarm_trigger
+    entity_id: alarm_control_panel.simplisafe
+    data:
+      code: 1234
+  - service: notify.notify_ios
+    data:
+      message: Alarm Triggered!
+      data:
+        push:
+          badge: 0
+  - service: script.living_room_lights_flash
+  - service: script.kitchen_lights_flash
+  - service: script.master_bed_light_flash
+  - service: script.cabinet_lights_flash
+  - wait_template: '{{ states.alarm_control_panel.simplisafe.state == ''disarmed''
+      }}'
+  - service: script.turn_off
+    data:
+      entity_id: script.living_room_lights_flash
+  - service: script.turn_off
+    data:
+      entity_id: script.kitchen_lights_flash
+  - service: script.turn_off
+    data:
+      entity_id: script.master_bed_lights_flash
+  - service: script.turn_off
+    data:
+      entity_id: script.master_bed_lights_flash
+  - service: script.turn_off
+    data:
+      entity_id: script.cabinet_lights_flash
+living_room_lights_flash:
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id: light.living_room_lights
+      brightness_pct: 100
+  - delay:
+      seconds: 3
+  - service: light.turn_off
+    data:
+      entity_id: light.living_room_lights
+  - delay:
+      seconds: 3
+  - service: script.turn_off
+    data:
+      entity_id: script.living_room_lights_flash
+  - service: script.turn_on
+    data:
+      entity_id: script.living_room_lights_flash
+family_room_lights_flash:
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id: light.family_room_lights
+      brightness_pct: 100
+  - delay:
+      seconds: 3
+  - service: light.turn_off
+    data:
+      entity_id: light.family_room_lights
+  - delay:
+      seconds: 3
+  - service: script.turn_off
+    data:
+      entity_id: script.family_room_lights_flash
+  - service: script.turn_on
+    data:
+      entity_id: script.family_room_lights_flash
+dining_room_lights_flash:
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id: light.dining_room_lights
+      brightness_pct: 100
+  - delay:
+      seconds: 3
+  - service: light.turn_off
+    data:
+      entity_id: light.dining_room_lights
+  - delay:
+      seconds: 3
+  - service: script.turn_off
+    data:
+      entity_id: script.dining_room_lights_flash
+  - service: script.turn_on
+    data:
+      entity_id: script.dining_room_lights_flash
+master_bed_lights_flash:
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id: light.master_suite_lights
+      brightness_pct: 100
+  - delay:
+      seconds: 3
+  - service: light.turn_off
+    data:
+      entity_id: light.master_suite_lights
+  - delay:
+      seconds: 3
+  - service: script.turn_off
+    data:
+      entity_id: script.master_bed_lights_flash
+  - service: script.turn_on
+    data:
+      entity_id: script.master_bed_lights_flash
+cabinet_lights_flash:
+  sequence:
+  - service: switch.turn_on
+    data:
+      entity_id: switch.cabinet_lights
+  - delay:
+      seconds: 4
+  - service: switch.turn_off
+    data:
+      entity_id: switch.cabinet_lights
+  - delay:
+      seconds: 2
+  - service: script.turn_off
+    data:
+      entity_id: script.cabinet_lights_flash
+  - service: script.turn_on
+    data:
+      entity_id: script.cabinet_lights_flash
+kitchen_lights_flash:
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id:
+      - light.kitchen_lights
+  - delay:
+      seconds: 2
+  - service: light.turn_off
+    data:
+      entity_id:
+      - light.kitchen_lights
+  - delay:
+      seconds: 2
+  - service: script.turn_off
+    data:
+      entity_id: script.kitchen_lights_flash
+  - service: script.turn_on
+    data:
+      entity_id: script.kitchen_lights_flash
+vacation_lights:
+  sequence:
+  - service: light.turn_on
+    data_template:
+      entity_id: "{% for item in [(states.group.all_lights.attributes.entity_id)]\
+        \ %} {% set random_light = item | random %}\n  {{random_light}}\n{% endfor\
+        \ %}"
+      brightness: 65
+amcrest_ptz_1:
+  sequence:
+  - service: shell_command.amcrest_ptz_1
+amcrest_ptz_2:
+  sequence:
+  - service: shell_command.amcrest_ptz_2
+amcrest_ptz_3:
+  sequence:
+  - service: shell_command.amcrest_ptz_3
+amcrest_ptz_4:
+  sequence:
+  - service: shell_command.amcrest_ptz_4
+amcrest_ptz_5:
+  sequence:
+  - service: shell_command.amcrest_ptz_5
+play_pauls_playlist:
+  sequence:
+  - service: shell_command.play_pauls_playlist
+open_garage:
+  sequence:
+  - condition: state
+    entity_id: cover.garage
+    state: closed
+  - service: cover.open_cover
+    data:
+      entity_id: cover.garage
+master_suite_light_wakeup:
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id: light.master_suite_lights
+      brightness: 4
+  - delay:
+      seconds: 18
+  - service: script.turn_on
+    data:
+      entity_id: script.29_min_light_transition
+29_min_light_transition:
+  sequence:
+  - condition: template
+    value_template: '{{ states.light.master_suite_lights.attributes.brightness | int
+      <= 251 }}'
+  - service_template: light.turn_on
+    data_template:
+      entity_id: light.master_suite_lights
+      brightness: '{{ states.light.master_suite_lights.attributes.brightness | int
+        + 4 }}'
+  - delay:
+      seconds: 18
+  - condition: state
+    entity_id: light.master_suite_lights
+    state: 'on'
+  - service: script.turn_off
+    data:
+      entity_id: script.29_min_light_transition
+  - service: script.turn_on
+    data:
+      entity_id: script.29_min_light_transition
+evelyns_random_night_light:
+  sequence:
+  - service: light.turn_on
+    entity_id: light.evelyns_night_light
+    data_template:
+      brightness: 25
+      rgb_color:
+      - '{{ (range(0, 255)|random) }}'
+      - '{{ (range(0, 255)|random) }}'
+      - '{{ (range(0, 255)|random) }}'
+  - service: timer.start
+    entity_id: timer.evelyns_night_light
+download_ring_video:
+  sequence:
+  - service: downloader.download_file
+    data_template:
+      url: '{{states.camera.front_door.attributes.video_url}}'
+      filename: '{{as_timestamp(now()) | timestamp_custom(''%d-%b-%Y_at_%H_%M_%S.m4v'')}}'
+      overwrite: 'true'
+  - service: downloader.download_file
+    data_template:
+      url: '{{states.camera.front_door.attributes.video_url}}'
+      filename: camera_front_door_static.m4v
+      overwrite: 'true'
+sab_pause:
+  sequence:
+  - service: sabnzbd.pause
+sab_resume:
+  sequence:
+  - service: sabnzbd.resume
+living_room_fan_on_speed_low:
+  sequence:
+  - service: fan.turn_on
+    entity_id: fan.living_room_fan
+  - service: fan.set_speed
+    data:
+      entity_id: fan.living_room_fan
+      speed: low
+living_room_fan_speed_low:
+  sequence:
+  - service: fan.set_speed
+    data:
+      entity_id: fan.living_room_fan
+      speed: low
+restart_home_assistant:
+  sequence:
+  - service: homeassistant.restart
+shutdown_unraid:
+  sequence:
+  - service: shell_command.shutdown_unraid
+climate_away_mode_off:
+  sequence:
+  - service: climate.set_away_mode
+    data:
+      entity_id: climate.first_floor
+      away_mode: 'off'
+  - service: climate.set_away_mode
+    data:
+      entity_id: climate.second_floor
+      away_mode: 'off'
+climate_away_mode_on:
+  sequence:
+  - service: climate.set_away_mode
+    data:
+      entity_id: climate.first_floor
+      away_mode: 'on'
+  - service: climate.set_away_mode
+    data:
+      entity_id: climate.second_floor
+      away_mode: 'on'
+climate_first_floor_resume_schedule:
+  sequence:
+  - data:
+      entity_id: climate.first_floor
+    service: climate.ecobee_resume_program
+  - data:
+      entity_id: climate.second_floor
+    service: climate.ecobee_resume_program
+  alias: climate_resume_schedule
+climate_second_floor_resume_schedule:
+  sequence:
+  - service: climate.ecobee_resume_program
+    data:
+      entity_id: climate.second_floor
+circulate_air_master_suite:
+  sequence:
+  - service: fan.turn_on
+    entity_id: fan.master_suite_fan
+  - service: fan.set_speed
+    data:
+      entity_id: fan.master_suite_fan
+      speed: medium
+  - delay:
+      minutes: 5
+  - service: fan.turn_off
+    entity_id: fan.master_suite_fan
+circulate_air_living_room:
+  sequence:
+  - service: fan.turn_on
+    entity_id: fan.living_room_fan
+  - service: fan.set_speed
+    data:
+      entity_id: fan.living_room_fan
+      speed: medium
+  - delay:
+      minutes: 5
+  - service: fan.turn_off
+    entity_id: fan.living_room_fan
+circulate_air_family_room:
+  sequence:
+  - service: fan.turn_on
+    entity_id: fan.family_room_fan
+  - service: fan.set_speed
+    data:
+      entity_id: fan.family_room_fan
+      speed: medium
+  - delay:
+      minutes: 5
+  - service: fan.turn_off
+    entity_id: fan.family_room_fan
+set_alexis_temps:
+  sequence:
+  - delay:
+      seconds: 30
+  - service: climate.set_hold_mode
+    data:
+      entity_id: climate.first_floor
+      hold_mode: Alexis Temps
+  - service: climate.set_hold_mode
+    data:
+      entity_id: climate.second_floor
+      hold_mode: Alexis Temps
+set_paul_temps:
+  sequence:
+  - delay:
+      seconds: 30
+  - condition: state
+    entity_id: input_boolean.alexis_combined_state
+    state: 'off'
+  - service: climate.set_hold_mode
+    data:
+      entity_id: climate.first_floor
+      hold_mode: Paul Temps
+  - service: climate.set_hold_mode
+    data:
+      entity_id: climate.second_floor
+      hold_mode: Paul Temps
+paul_is_home:
+  sequence:
+  - condition: state
+    entity_id: input_boolean.alexis_combined_state
+    state: 'on'
+  - data:
+      data:
+        push:
+          badge: 0
+      message: Madam Alexis, Master Paul has arrived home
+    service: notify.ios_alexis_iphone_app_app
+alexis_is_home:
+  sequence:
+  - condition: state
+    entity_id: input_boolean.pauls_combined_state
+    state: 'on'
+  - data:
+      data:
+        push:
+          badge: 0
+          sound: US-EN-Alexa-Wife-Is-Arriving.wav
+      message: Alexis is home!
+    service: notify.ios_pauls_iphone_app
+doorbell_pressed:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Someone is at the door {{as_timestamp(states.binary_sensor.ring_front_door_motion.last_changed)
+        timestamp_custom('%d %b %Y at %H:%M.%S')}}
+      data:
+        push:
+          badge: 0
+first_floor_high_temp_warning:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: High Temp Warning! First floor temperature is {{ states.sensor.first_floor_temperature.state
+        }} degrees
+      data:
+        push:
+          badge: 0
+second_floor_high_temp_warning:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: High Temp Warning! Second floor temperature is {{ states.sensor.second_floor_temperature.state
+        }} degrees
+      data:
+        push:
+          badge: 0
+first_floor_low_temp_warning:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Low Temp Warning! First floor temperature is {{ states.sensor.first_floor_temperature.state
+        }} degrees
+      data:
+        push:
+          badge: 0
+second_floor_low_temp_warning:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Low Temp Warning! Second floor temperature is {{ states.sensor.second_floor_temperature.state
+        }} degrees
+      data:
+        push:
+          badge: 0
+garage_door_left_open:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: One of you dorks left the garage door open. I guess I will close it...
+      data:
+        push:
+          badge: 0
+calendar_reminders:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: 'Just a reminder, you have an calendar event: {{ states.sensor.calendar_upcoming_event.state
+        }}'
+      data:
+        push:
+          badge: 0
+birthday_reminders:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Today is {{ states.calendar.contacts.attributes.message[:-11] }}'s
+        birthday!
+      data:
+        push:
+          badge: 0
+garage_opened:
+  sequence:
+  - service: notify.ios_pauls_iphone_app
+    data_template:
+      message: The garage door just opened
+      data:
+        push:
+          badge: 0
+back_door_lock_batteries_low:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Back door lock batteries are low!
+      data:
+        push:
+          badge: 0
+doorbell_battery_low:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: Doorbell battery is low!
+      data:
+        push:
+          badge: 0
+apc_status_offline:
+  sequence:
+  - service: notify.ios_pauls_iphone_app
+    data:
+      message: Warning! APC UPS is offline!
+      data:
+        push:
+          badge: 0
+apc_status_nominal_voltage:
+  sequence:
+  - service: notify.ios_pauls_iphone_app
+    data_template:
+      message: Warning! APC UPS has reached nominal output of 24V. This is bad.
+      data:
+        push:
+          badge: 0
+ups_on_batteries:
+  sequence:
+  - service: notify.ios_pauls_iphone_app
+    data:
+      message: Warning! APC UPS is offline!
+      data:
+        push:
+          badge: 0
+          category: ups
+webster_calendar_notify:
+  sequence:
+  - service: notify.ios_alexis_iphone_app
+    data:
+      message: '{{states.sensor.webster_calendar_upcoming_event.state}}'
+      data:
+        push:
+          badge: 0
+shutdown_server_notify:
+  sequence:
+  - service: shell_command.shutdown_unraid
+  - service: notify.ios_pauls_iphone_app
+    data:
+      message: Server shutdown started
+      data:
+        push:
+          badge: 0
+keep_server_running_notify:
+  sequence:
+  - service: notify.ios_pauls_iphone_app
+    data:
+      message: No action taken
+      data:
+        push:
+          badge: 0
+alarm_arming_notify:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: SimpliSafe alarm arming...
+      data:
+        push:
+          badge: 0
+alarm_armed_away_notify:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: SimpliSafe Armed Away!
+      data:
+        push:
+          badge: 0
+alarm_armed_home_notify:
+  sequence:
+  - service: notify.notify_ios
+    data:
+      message: SimpliSafe Armed Home!
+      data:
+        push:
+          badge: 0
+turn_second_floor_hvac_fan_on:
+  sequence:
+  - service: climate.set_fan_mode
+    data:
+      entity_id: climate.second_floor
+      fan_mode: 'on'
+turn_second_floor_hvac_fan_off:
+  sequence:
+  - service: climate.set_fan_mode
+    data:
+      entity_id: climate.second_floor
+      fan_mode: auto
+notify_change_air_filters:
+  sequence:
+  - data:
+      data:
+        push:
+          badge: 0
+      message: Change HVAC air filters
+    service: notify.ios_pauls_iphone_app

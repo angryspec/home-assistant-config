@@ -1,0 +1,553 @@
+#----------------------------------------------------------
+homeassistant:
+  name: 'Home'
+  latitude: !secret zone_0_lat
+  longitude: !secret zone_0_lon
+  elevation: 435
+  unit_system: metric
+  time_zone: America/Chicago
+  customize: !include customize.yaml
+  whitelist_external_dirs:
+    - /config
+###########################################################
+# Listed Alphabetical
+###########################################################
+amcrest:
+  - host: 192.168.1.218
+    username: !secret amcrest_user
+    password: !secret amcrest_pass
+    name: 'Baby Monitor'
+    resolution: high
+    stream_source: rtsp
+    sensors:
+      - motion_detector
+#----------------------------------------------------------
+apcupsd:
+  host: !secret app_server
+  port: 3551
+#----------------------------------------------------------
+automation: !include automations.yaml
+automation old: !include old_automations.yaml
+#----------------------------------------------------------
+binary_sensor: 
+  - platform: ring
+    monitored_conditions:
+      - 'ding'
+      - 'motion'
+  - platform: mqtt
+    name: 'PIR 1'
+    device_class: motion 
+    state_topic: 'mqttpi01/input/digital5'
+    payload_on: 'on' 
+    payload_off: 'off'
+    availability_topic: 'mqttpi01/status'
+    payload_available: 'online'
+    payload_not_available: 'offline'
+  - platform: mqtt
+    name: 'PIR 2'
+    device_class: motion
+    state_topic: 'mqttpi01/input/digital6'
+    payload_on: 'on' 
+    payload_off: 'off'
+    availability_topic: 'mqttpi01/status'
+    payload_available: 'online'
+    payload_not_available: 'offline'
+  - platform: mqtt
+    name: 'PIR 3'
+    device_class: motion
+    state_topic: 'mqttpi01/input/digital13'
+    payload_on: 'on' 
+    payload_off: 'off'
+    availability_topic: 'mqttpi01/status'
+    payload_available: 'online'
+    payload_not_available: 'offline'
+  - platform: mqtt
+    name: 'PIR 4'
+    device_class: motion
+    state_topic: 'mqttpi01/input/digital26'
+    payload_on: 'on' 
+    payload_off: 'off'
+    availability_topic: 'mqttpi01/status'
+    payload_available: 'online'
+    payload_not_available: 'offline'
+  - platform: mqtt
+    name: 'Garage Door Sensor'
+    device_class: opening
+    state_topic: 'mqttpi01/input/digital23'
+    payload_on: 'open' 
+    payload_off: 'closed'
+    availability_topic: 'mqttpi01/status'
+    payload_available: 'online'
+    payload_not_available: 'offline'
+#----------------------------------------------------------    
+camera:
+  - platform: ring
+  - platform: amcrest
+#----------------------------------------------------------
+cloud: !include cloud.yaml
+#----------------------------------------------------------
+config:
+#----------------------------------------------------------
+conversation:
+  intents:
+    ShoppingListAddItem:
+      - Add {item} to my shopping list
+#----------------------------------------------------------
+cover:
+  - platform: mqtt
+    name: 'Garage'
+    command_topic: 'mqttpi01/output/digital24/set_on_ms'
+    state_topic: 'mqttpi01/input/digital23'
+    qos: 0
+    retain: true
+    payload_open: '200'
+    payload_close: '200'
+    payload_stop: '200'
+    state_open: 'open'
+    state_closed: 'closed'
+    payload_available: 'online'
+    payload_not_available: 'offline'
+    optimistic: false 
+#----------------------------------------------------------
+device_tracker:
+  - platform: icloud
+    username: !secret alexis_icloud_username
+    password: !secret alexis_icloud_password
+    account_name: !secret alexis_icloud_account_name
+  - platform: icloud
+    username: !secret pauls_icloud_username
+    password: !secret pauls_icloud_password
+    account_name: !secret pauls_icloud_account_name
+  - platform: mqtt
+    devices:
+      paul_mqtt: 'smartthings/Pauls iPhone/presence'
+      alexisiphone_mqtt: 'smartthings/Alexis iPhone/presence'  
+#----------------------------------------------------------
+discovery:
+#----------------------------------------------------------
+ecobee:
+  api_key: !secret ecobee_api
+#----------------------------------------------------------
+fan: 
+  - platform: mqtt
+    name: 'Master Suite Fan'
+    state_topic: 'smartthings/Master Suite Fan/switch'
+    command_topic: 'smartthings/Master Suite Fan/switch'
+    speed_state_topic: 'smartthings/Master Suite Fan/level'
+    speed_command_topic: 'smartthings/Master Suite Fan/level'
+    retain: true
+    payload_on: 'on'
+    payload_off: 'off'
+    payload_low_speed: '33'
+    payload_medium_speed: '66'
+    payload_high_speed: '99'
+    speeds:
+      - low
+      - medium
+      - high
+  - platform: mqtt
+    name: 'Living Room Fan'
+    state_topic: 'smartthings/Living Room Fan/switch'
+    command_topic: 'smartthings/Living Room Fan/switch'
+    speed_state_topic: 'smartthings/Living Room Fan/level'
+    speed_command_topic: 'smartthings/Living Room Fan/level'
+    retain: true
+    payload_on: 'on'
+    payload_off: 'off'
+    payload_low_speed: '33'
+    payload_medium_speed: '66'
+    payload_high_speed: '99'
+    speeds:
+      - low
+      - medium
+      - high
+  - platform: mqtt
+    name: 'Family Room Fan'
+    state_topic: 'smartthings/Family Room Fan/switch'
+    command_topic: 'smartthings/Family Room Fan/switch'
+    speed_state_topic: 'smartthings/Family Room Fan/level'
+    speed_command_topic: 'smartthings/Family Room Fan/level'
+    retain: true
+    payload_on: 'on'
+    payload_off: 'off'
+    payload_low_speed: '33'
+    payload_medium_speed: '66'
+    payload_high_speed: '99'
+    speeds:
+      - low
+      - medium
+      - high
+#----------------------------------------------------------
+ffmpeg:
+#----------------------------------------------------------  
+frontend:
+  themes:
+    slate_blue:
+      primary-color: '#123456'
+#----------------------------------------------------------
+history: 
+  include:
+    domains:
+      - alarm_control_panel
+      - automation
+      - climate
+      - cover
+      - device_tracker
+      - fan
+      - input_boolean
+      - light
+      - sensor
+      - switch
+      - timer
+#----------------------------------------------------------
+http:
+  api_password: !secret http_password
+  ip_ban_enabled: true
+  trusted_proxies: !secret app_server_proxy
+  use_x_forwarded_for: true
+  login_attempts_threshold: 5
+#----------------------------------------------------------
+input_boolean:
+  pauls_combined_state:
+  alexis_combined_state:
+#----------------------------------------------------------
+ios: !include ios.yaml
+#----------------------------------------------------------
+light:  
+  - platform: mqtt
+    name: 'Master Suite Lights'
+    state_topic: 'smartthings/Master Suite Lights/switch'
+    command_topic: 'smartthings/Master Suite Lights/switch'
+    brightness_state_topic: 'smartthings/Master Suite Lights/level'
+    brightness_command_topic: 'smartthings/Master Suite Lights/level'
+    payload_on: 'on'
+    payload_off: 'off'
+    brightness_scale: 99
+    retain: true
+    qos: 0
+  - platform: mqtt
+    name: 'Dining Room Lights'
+    state_topic: 'smartthings/Dining Room Lights/switch'
+    command_topic: 'smartthings/Dining Room Lights/switch'
+    brightness_state_topic: 'smartthings/Dining Room Lights/level'
+    brightness_command_topic: 'smartthings/Dining Room Lights/level'
+    payload_on: 'on'
+    payload_off: 'off'
+    brightness_scale: 99
+    retain: true
+    qos: 0
+  - platform: mqtt
+    name: 'Living Room Lights'
+    state_topic: 'smartthings/Living Room Lights/switch'
+    command_topic: 'smartthings/Living Room Lights/switch'
+    brightness_state_topic: 'smartthings/Living Room Lights/level'
+    brightness_command_topic: 'smartthings/Living Room Lights/level'
+    payload_on: 'on'
+    payload_off: 'off'
+    brightness_scale: 99
+    retain: true
+    qos: 0
+  - platform: mqtt
+    name: 'Family Room Lights'
+    state_topic: 'smartthings/Family Room Lights/switch'
+    command_topic: 'smartthings/Family Room Lights/switch'
+    brightness_state_topic: 'smartthings/Family Room Lights/level'
+    brightness_command_topic: 'smartthings/Family Room Lights/level'
+    payload_on: 'on'
+    payload_off: 'off'
+    brightness_scale: 99
+    retain: true
+    qos: 0
+  - platform: mqtt
+    name: 'Guest Bathroom Lamp'
+    state_topic: 'sonoff_basic_2/switch/sonoff_basic_2_relay/state'
+    command_topic: 'sonoff_basic_2/switch/sonoff_basic_2_relay/command'
+    availability_topic: 'sonoff_basic_2/status'
+    qos: 0
+    payload_on: 'ON'
+    payload_off: 'OFF'
+    optimistic: false
+  - platform: mqtt
+    name: 'Stove Lights'
+    state_topic: 'sonoff_basic_3/switch/sonoff_basic_3_relay/state'
+    command_topic: 'sonoff_basic_3/switch/sonoff_basic_3_relay/command'
+    availability_topic: 'sonoff_basic_3/status'
+    qos: 0
+    payload_on: 'ON'
+    payload_off: 'OFF'
+    optimistic: false
+  - platform: mqtt
+    name: 'Sink Lights'
+    state_topic: 'sonoff_basic_4/switch/sonoff_basic_4_relay/state'
+    command_topic: 'sonoff_basic_4/switch/sonoff_basic_4_relay/command'
+    availability_topic: 'sonoff_basic_4/status'
+    qos: 0
+    payload_on: 'ON'
+    payload_off: 'OFF'
+    optimistic: false
+  - platform: group
+    name: 'Kitchen Lights'
+    entities:
+      - light.stove_lights
+      - light.sink_lights
+  - platform: tplink
+    name: 'Evelyns Night Light'
+    host: 192.168.1.212
+#----------------------------------------------------------
+logbook:
+#----------------------------------------------------------
+logger:
+  default: fatal
+  logs:
+    homeassistant.components.http.ban: warning
+#----------------------------------------------------------
+map:
+#----------------------------------------------------------
+mqtt:
+  broker: !secret app_server
+  port: 1883
+  username: !secret mqtt_user
+  password: !secret mqtt_pass
+  birth_message:
+    topic: 'hass/status'
+    payload: 'online'
+  will_message:
+    topic: 'hass/status'
+    payload: 'offline'  
+#----------------------------------------------------------
+notify:
+  - name: 'Notify IOS' 
+    platform: group
+    services:
+      - service: ios_pauls_iphone_app
+      - service: ios_alexis_iphone_app
+      - service: ios_eves_ipad_app
+#----------------------------------------------------------
+proximity:
+  home:
+    ignored_zones:
+      - work
+      - eves_school
+    devices:
+      - device_tracker.paul
+      - device_tracker.alexis
+    tolerance: 50
+    unit_of_measurement: km
+#----------------------------------------------------------
+recorder: 
+  purge_interval: 30
+  purge_keep_days: 15
+  include:
+    domains:
+      - alarm_control_panel
+      - climate
+      - cover
+      - device_tracker
+      - fan
+      - input_boolean
+      - light
+      - notify
+      - sensor
+      - switch
+      - timer
+#----------------------------------------------------------
+ring:
+  username: !secret ring_user
+  password: !secret ring_pass
+#----------------------------------------------------------
+roku:
+  - host: 192.168.1.223
+  - host: 192.168.1.224
+#----------------------------------------------------------     
+script: !include scripts.yaml
+#----------------------------------------------------------
+sensor:
+  - platform: amcrest
+  - platform: time_date
+    display_options:
+      - 'time_date'
+  - platform: ring
+    monitored_conditions:
+      - 'battery'
+      - 'last_activity'
+      - 'last_ding'
+      - 'last_motion'
+  - platform: filesize
+    file_paths:
+      - '/config/home-assistant_v2.db'
+      - '/config/home-assistant.log'
+  - platform: uptime
+  - platform: systemmonitor
+    resources:
+      - type: memory_use_percent
+      - type: load_1m
+      - type: load_5m
+      - type: processor_use
+      - type: network_in
+        arg: br0
+      - type: network_out
+        arg: br0
+  - platform: speedtest
+    minute: 30
+    hour:
+      - 0
+      - 6
+      - 12
+      - 18
+    monitored_conditions:
+      - ping
+      - download
+      - upload
+  - platform: apcupsd
+    resources:
+      - bcharge
+      - alarmdel
+      - battv 
+      - nombattv
+      - numxfers
+      - status
+      - timeleft
+      - tonbatt
+  - platform: worldclock
+    time_zone: America/Chicago
+    name: !secret city_name
+  - platform: darksky
+    api_key: !secret darksky_api
+    update_inverval: '00:30'
+    monitored_conditions:
+      - temperature
+      - temperature_high
+      - temperature_low
+      - humidity
+      - precip_probability
+      - precip_intensity_max
+      - wind_speed
+      - pressure
+      - wind_bearing
+      - apparent_temperature_high
+      - apparent_temperature_low
+      - daily_summary
+      - hourly_summary
+      - summary
+      - icon
+      - uv_index
+  - platform: mqtt
+    name: 'Basement Humidity'  
+    unit_of_measurement: '%'
+    state_topic: 'sonoff_th16_1/sensor/basement_humidity/state'
+    availability_topic: 'sonoff_th16_1/status'
+  - platform: mqtt
+    name: 'Basement Temperature'   
+    unit_of_measurement: '°C'
+    state_topic: 'sonoff_th16_1/sensor/basement_temperature/state'
+    availability_topic: 'sonoff_th16_1/status'
+  - platform: template
+    sensors:     
+      first_floor_ecobee_schedule_state:
+        value_template: >-
+          {% set value = states.climate.first_floor.attributes.climate_mode %}
+          {% if value %}
+            {{value}}
+          {% else %}
+            {{ states.sensor.first_floor_ecobee_schedule_state.state }}
+          {% endif %}
+      second_floor_ecobee_schedule_state:
+        value_template: >-
+          {% set value = states.climate.second_floor.attributes.climate_mode %}
+          {% if value %}
+            {{value}}
+          {% else %}
+            {{ states.sensor.second_floor_ecobee_schedule_state.state }}
+          {% endif %}
+      second_floor_ecobee_fan_state:
+        value_template: >-
+          {% set value = states.climate.second_floor.attributes.fan %}
+          {% if value %}
+            {{value}}
+          {% else %}
+            {{ states.sensor.second_floor_ecobee_fan_state.state }}
+          {% endif %}
+#----------------------------------------------------------
+shell_command:
+  amcrest_ptz_1: 'curl --location --anyauth -u user:password --request GET "http://192.168.1.218/cgi-bin/ptz.cgi?action=start&channel=1&code=GotoPreset&arg1=0&arg2=1&arg3=&arg4=0"'
+  amcrest_ptz_2: 'curl --location --anyauth -u user:password --request GET "http://192.168.1.218/cgi-bin/ptz.cgi?action=start&channel=1&code=GotoPreset&arg1=0&arg2=2&arg3=&arg4=0"'
+  amcrest_ptz_3: 'curl --location --anyauth -u user:password --request GET "http://192.168.1.218/cgi-bin/ptz.cgi?action=start&channel=1&code=GotoPreset&arg1=0&arg2=3&arg3=&arg4=0"'
+  amcrest_ptz_4: 'curl --location --anyauth -u user:password --request GET "http://192.168.1.218/cgi-bin/ptz.cgi?action=start&channel=1&code=GotoPreset&arg1=0&arg2=4&arg3=&arg4=0"'
+  amcrest_ptz_5: 'curl --location --anyauth -u user:password --request GET "http://192.168.1.218/cgi-bin/ptz.cgi?action=start&channel=1&code=GotoPreset&arg1=0&arg2=5&arg3=&arg4=0"'
+#----------------------------------------------------------
+shopping_list:
+#----------------------------------------------------------
+simplisafe:
+  accounts:
+    - username: !secret simplisafe_username
+      password: !secret simplisafe_password
+#----------------------------------------------------------
+splunk:
+  name: 'homeassistant'
+  host: !secret app_server
+  token: !secret app_server_splunk_token
+#----------------------------------------------------------      
+sun:
+#----------------------------------------------------------
+switch:
+  - platform: tplink
+    name: 'Family Room Receiver'
+    host: 192.168.1.214
+  - platform: tplink
+    name: 'Cabinet Lights'
+    host: 192.168.1.213
+  - platform: mqtt
+    name: 'Basement Dehumidifier'
+    state_topic: 'sonoff_th16_1/switch/sonoff_th16-1_relay/state'
+    command_topic: 'sonoff_th16_1/switch/sonoff_th16-1_relay/command'
+    availability_topic: 'sonoff_th16_1/status'
+    payload_on: 'ON'
+    payload_off: 'OFF'
+    optimistic: false
+    qos: 0
+    retain: true
+#----------------------------------------------------------
+timer:
+  alarm_countdown:
+    duration: '00:01:00'
+  alarm_duration:
+    duration: '00:03:00'
+  kitchen_accent_lights:
+    duration: '00:15:00'
+  family_room_lights:
+    duration: '00:15:00'
+  living_room_fan:
+    duration: '00:30:00'
+  master_suite_fan:
+    duration: '00:30:00'
+  family_room_fan:
+    duration: '00:30:00'
+  evelyns_night_light:
+    duration: '00:00:30'
+#----------------------------------------------------------
+weather:
+  - platform: darksky
+    api_key: !secret darksky_api
+#----------------------------------------------------------
+zeroconf:
+#----------------------------------------------------------
+zone 0:
+  name: 'Home'
+  latitude: !secret zone_0_lat
+  longitude: !secret zone_0_lon
+  radius: 150
+  icon: mdi:home
+zone 1:
+  name: 'Work'
+  latitude: !secret zone_1_lat
+  longitude: !secret zone_1_lon
+  radius: 200
+  passive: true
+  icon: mdi:school
+zone 2:
+  name: 'Eves School' 
+  latitude: !secret zone_2_lat
+  longitude: !secret zone_2_lon
+  radius: 200
+  passive: true
+  icon: mdi:school
