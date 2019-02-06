@@ -13,6 +13,10 @@ demo <https://home-assistant.io/demo/>`__, `installation instructions <https://h
 
 My personal Home Assistant configuration. I hope this helps someone out! 
 
+<p>
+
+<a href="https://github.com/CCOSTAN/Home-AssistantConfig#logo"><img align="right" border="0" src="https://raw.githubusercontent.com/CCOSTAN/Home-AssistantConfig/master/config/www/custom_ui/floorplan/images/branding/up_arrow.png" width="22" ></a>
+    
 <a href="https://github.com/angryspec/home-assistant-config<img src="https://github.com/angryspec/home-assistant-config/home-assist-main.PNG<img"/></a>
 
 <https://github.com/angryspec/home-assistant-config/home-assist-first-floor.PNG>
@@ -28,3 +32,4 @@ My personal Home Assistant configuration. I hope this helps someone out!
 <https://github.com/angryspec/home-assistant-config/home-assist-devices.PNG>
 
 <https://github.com/angryspec/home-assistant-config/home-assist-system.PNG>
+</p>
