@@ -13,7 +13,7 @@ demo <https://home-assistant.io/demo/>`__, `installation instructions <https://h
 
 My personal Home Assistant configuration. I hope this helps someone out! 
 
-'<https://github.com/angryspec/home-assistant-config/home-assist-main.PNG>'
+<a href="https://github.com/angryspec/home-assistant-config<img src="https://github.com/angryspec/home-assistant-config/home-assist-main.PNG<img?branch=master"/></a>
 
 <https://github.com/angryspec/home-assistant-config/home-assist-first-floor.PNG>
 
